@@ -1,0 +1,62 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE - PyCharm / IntelliJ
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/shelf/
+.idea/httpRequests/
+.idea/vcs.xml
+
+# VS Code
+.vscode/
+
+# Kaggle datasets & archives
+*.zip
+*.tar.gz
+*.csv
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+
+# Model checkpoints & outputs
+*.pt
+*.pth
+*.onnx
+*.pb
+checkpoints/
+models/
+outputs/
+
+# Logs
+*.log
+logs/
+runs/
+wandb/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

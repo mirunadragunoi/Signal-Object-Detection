@@ -10,18 +10,18 @@ import numpy as np
 
 def preprocesare(imagine):
     # o sa fac convertire la luminanta cu canalul L
-    img = np.asarray(imagine.convert('L'), dtype=np.float32)
+    matrice = np.asarray(imagine.convert('L'), dtype=np.float32)
 
     # scot liniile slabe cu contrast stretching la percentilele de la 1 la 99
-    lo, hi = np.percentile(img, 1), np.percentile(img, 99)
+    percentil_minim, percentil_maxim = np.percentile(matrice, 1), np.percentile(matrice, 99)
 
-    if hi > lo:
-        img = np.clip((img - lo)/(hi - lo), 0, 1)
+    if percentil_maxim > percentil_minim:
+        matrice = np.clip((matrice - percentil_minim)/(percentil_maxim - percentil_minim), 0, 1)
     else:
-        img = img - img.min()
+        matrice = matrice - matrice.min()
 
     # normalizez per imagine ca sa uniformizez intensitatea
-    img = (img - img.mean()) / (img.std() + 1e-6)
+    matrice = (matrice - matrice.mean()) / (matrice.std() + 1e-6)
 
     # returnez array float32 cu imaginea preprocesata
-    return img
+    return matrice

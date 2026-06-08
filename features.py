@@ -20,26 +20,26 @@ def extrag_trasaturi_manuale(imagine):
     # peak uri pe proiectii
     for proiectie in [proiectie_coloana, proiectie_rand]:
         # normalizez in 0 1 ca sa am praguri consistente intre imagini
-        pro = (proiectie - proiectie.min()) / (proiectie.max() - proiectie.min() + 1e-6)
+        proiectie_normalizata = (proiectie - proiectie.min()) / (proiectie.max() - proiectie.min() + 1e-6)
 
-        peaks, _ = find_peaks(pro, prominence=0.1, distance=2)
+        varfuri, _ = find_peaks(proiectie_normalizata, prominence=0.1, distance=2)
 
-        if len(peaks) > 0:
-            inalt = pro[peaks]
+        if len(varfuri) > 0:
+            inaltimi_varfuri = proiectie_normalizata[varfuri]
 
             trasaturi.extend([
-                len(peaks),
-                inalt.mean(),
-                inalt.std() if len(peaks) > 1 else 0,
-                inalt.max(),
-                np.diff(peaks).mean() if len(peaks) > 1 else 0,
+                len(varfuri),
+                inaltimi_varfuri.mean(),
+                inaltimi_varfuri.std() if len(varfuri) > 1 else 0,
+                inaltimi_varfuri.max(),
+                np.diff(varfuri).mean() if len(varfuri) > 1 else 0,
             ])
         else:
             trasaturi.extend([0, 0, 0, 0, 0])
 
         # peak uri la proeminenta mai mare inseamna ca s linii puternice si la mai mica am linii slabe
-        trasaturi.append(len(find_peaks(pro, prominence=0.25, distance=2)[0]))
-        trasaturi.append(len(find_peaks(pro, prominence=0.05, distance=2)[0]))
+        trasaturi.append(len(find_peaks(proiectie_normalizata, prominence=0.25, distance=2)[0]))
+        trasaturi.append(len(find_peaks(proiectie_normalizata, prominence=0.05, distance=2)[0]))
 
     # filtre sobel directionale
     gradient_x = sobel(imagine, axis=1)
@@ -76,9 +76,9 @@ def extrag_trasaturi_manuale(imagine):
     ])
 
     # densitatea de pixeli aprinsi la 5 praguri
-    gg = (imagine - imagine.min()) / (imagine.max() - imagine.min() + 1e-6)
+    imagine_normalizata = (imagine - imagine.min()) / (imagine.max() - imagine.min() + 1e-6)
     for punct in [70, 80, 85, 90, 95]:
-        trasaturi.append((gg > np.percentile(gg, punct)).mean())
+        trasaturi.append((imagine_normalizata > np.percentile(imagine_normalizata, punct)).mean())
 
     return np.array(trasaturi, dtype=np.float32)
 
@@ -89,14 +89,14 @@ def extrag_manual_set(df, imagine_director, cale_cache):
         print(f" --->> cache: {cale_cache}")
         return np.load(cale_cache)
 
-    X = []
-    for i, fid in enumerate(df['id']):
-        g = preprocesare(Image.open(os.path.join(imagine_director, fid)))
-        X.append(extrag_trasaturi_manuale(g))
+    trasaturi_set = []
+    for i, id_fisier in enumerate(df['id']):
+        matrice_imagine = preprocesare(Image.open(os.path.join(imagine_director, id_fisier)))
+        trasaturi_set.append(extrag_trasaturi_manuale(matrice_imagine))
 
         if (i + 1) % 3000 == 0:
             print(f" --> {i + 1} / {len(df)}")
 
-    X = np.vstack(X).astype(np.float32)
-    np.save(cale_cache, X)
-    return X
+    trasaturi_set = np.vstack(trasaturi_set).astype(np.float32)
+    np.save(cale_cache, trasaturi_set)
+    return trasaturi_set
