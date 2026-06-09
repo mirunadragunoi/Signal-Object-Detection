@@ -97,9 +97,9 @@ class LineCNN(nn.Module):
         return self.classifier(x)
 
 
-def infereaza(model, df, img_dir, device, tta=False, este_test=False):
+def infereaza(model, df, imagine_director, device, tta=False, este_test=False):
 
-    dataset = SignalDataset(df, img_dir, augment=False, test=este_test)
+    dataset = SignalDataset(df, imagine_director, augment=False, test=este_test)
 
     incarcator = DataLoader(dataset, batch_size=configurare.BATCH_DIMENSIUNE, shuffle=False, num_workers=2)
 
@@ -179,8 +179,51 @@ def train_pe_fold(model_cale, train_df, train_index, valoare_index, ponderi_clas
         else:
             fara_progres += 1
 
-        # early stopping doar dupa min_epochs
+        # early stopping doar dupa mininul de epoci
         if epoca + 1 >= configurare.MIN_EPOCI and fara_progres >= configurare.RABDARE:
             break
 
     return best_acuratete
+
+# functie pentru versiunea 10 a codului in care am implementat varianta de tta extinsa
+def infereaza_tta_extinsa(model, df, imagine_director, device, tta=False, este_test=False):
+    # mediez probabilitatile pe 5 versiuni ale fiecarei imagini
+    # original, flip orizontal, translatie stg pe axa orizontala, translatie dr pe axa orizontala si flip orizonal
+    # combinat cu translatie stg
+
+    dataset = SignalDataset(df, imagine_director, augment=False, test=este_test)
+
+    incarcator = DataLoader(dataset, batch_size=configurare.BATCH_DIMENSIUNE, shuffle=False, num_workers=2)
+
+    model.eval()
+
+    lista_probabilitati, lista_trasaturi, extra = [], [], []
+
+    with torch.no_grad():
+        for imagini_lot, meta_lot in incarcator:
+            imagini_lot = imagini_lot.to(device)
+
+            # trasaturile doar pt imaginea originala ca sa fie consistena cu oof
+            lista_trasaturi.append(model(imagini_lot, return_feat=True).cpu().numpy())
+
+            # cele 5 versiuni pt predictie
+            imagine_flip = torch.flip(imagini_lot, dims=[3])
+            imagine_stanga = torch.roll(imagini_lot, shifts=-2, dims=3)
+            imagine_dreapta = torch.roll(imagini_lot, shifts=2, dims=3)
+            imagine_flip_stanga = torch.roll(imagine_flip, shifts=-2, dims=3)
+
+            prob_lot = (torch.softmax(model(imagini_lot), 1) +
+                        torch.softmax(model(imagine_flip), 1) +
+                        torch.softmax(model(imagine_stanga), 1) +
+                        torch.softmax(model(imagine_dreapta), 1) +
+                        torch.softmax(model(imagine_flip_stanga), 1)
+                        ) / 5
+
+            lista_probabilitati.append(prob_lot.cpu().numpy())
+
+            if isinstance(meta_lot, torch.Tensor):
+                extra.extend(meta_lot.numpy())
+            else:
+                extra.extend(meta_lot)
+
+    return np.concatenate(lista_probabilitati), np.concatenate(lista_trasaturi), extra

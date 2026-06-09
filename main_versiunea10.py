@@ -12,7 +12,7 @@ from sklearn.metrics import confusion_matrix, classification_report, accuracy_sc
 
 import configurare
 from features import extrag_manual_set
-from cnn import LineCNN, infereaza, train_pe_fold
+from cnn import LineCNN, infereaza, train_pe_fold, infereaza_tta_extinsa
 
 def main():
 
@@ -79,7 +79,7 @@ def main():
 
             print(f"  seed {seed} fold {fold+1}: {acuratete:.4f}")
 
-            # OOF -->> extragem predictii pe foldul de validare
+            # OOF -->> aici folosesc inferenta standard fara tta
             model = LineCNN(configurare.NR_CLASE).to(device)
             model.load_state_dict(torch.load(model_cale))
             probabilitati_val, trasaturi_val, etichete_val = infereaza(model, date_antrenare.iloc[valoare_index], configurare.TRAIN_IMAGINI_DIRECTOR, device)
@@ -93,7 +93,7 @@ def main():
     print(f"OOF CNN acc: {acuratete_oof_cnn:.4f}")
 
 
-    # predictii test CNN cu TTA si mediere peste folduri
+    # predictii test CNN cu TTA si mediere peste folduri ---->>>> folosesc acum infereaaza tta existns
     print()
     print("PREDICTII TEST CNN CU TTA")
 
@@ -103,7 +103,7 @@ def main():
         model = LineCNN(configurare.NR_CLASE).to(device)
         model.load_state_dict(torch.load(cale))
 
-        probabilitati_fold, trasaturi_fold, id_uri_fold = infereaza(model, date_test, configurare.TEST_IMAGINI_DIRECTOR, device, tta=True, este_test=True)
+        probabilitati_fold, trasaturi_fold, id_uri_fold = infereaza_tta_extinsa(model, date_test, configurare.TEST_IMAGINI_DIRECTOR, device, tta=True, este_test=True)
 
         test_probabilitati_folds.append(probabilitati_fold)
         test_trasaturi_folds.append(trasaturi_fold)
@@ -240,14 +240,14 @@ def main():
     submisii = [("ensemble", predictii_ensemble), ("cnn", predictii_cnn), ("svm", predictii_svm), ("mlp", predictii_mlp)]
 
     for nume, pred in submisii:
-        cale_fisier = os.path.join(configurare.OUTPUT_DIRECTOR, f"submission_{nume}.csv")
+        cale_fisier = os.path.join(configurare.OUTPUT_DIRECTOR, f"submission_v10_{nume}.csv")
         pd.DataFrame({"id": id_uri, "label": pred}).to_csv(cale_fisier, index=False)
         distributie = pd.Series(pred).value_counts().sort_index().to_dict()
         print(f"  {cale_fisier} | distributie: {distributie}")
 
     print()
     print("GATA! SUBMISIA PRINCIPALA")
-    print(f"  {os.path.join(configurare.OUTPUT_DIRECTOR, 'submission_ensemble.csv')}")
+    print(f"  {os.path.join(configurare.OUTPUT_DIRECTOR, 'submission_ensemble_v10.csv')}")
 
 
 

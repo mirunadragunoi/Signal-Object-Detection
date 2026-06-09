@@ -46,10 +46,10 @@ def extrag_trasaturi_manuale(imagine):
     gradient_y = sobel(imagine, axis=0)
 
     trasaturi.extend([np.abs(gradient_x).mean(), np.abs(gradient_x).std(), np.abs(gradient_x).max()])
-    trasaturi.append([np.abs(gradient_y).mean(), np.abs(gradient_y).std(), np.abs(gradient_y).max()])
+    trasaturi.extend([np.abs(gradient_y).mean(), np.abs(gradient_y).std(), np.abs(gradient_y).max()])
 
     # raport orizontal pe vertical
-    trasaturi.append(np.abs(gradient_x).mean() / (np.abs(gradient_x).mean() + 1e-6))
+    trasaturi.append(np.abs(gradient_x).mean() / (np.abs(gradient_y).mean() + 1e-6))
 
     # histograma orientarilor pe gradient
     # am 8 bin uri pe 0 180 grade
