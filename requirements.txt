@@ -1,0 +1,7 @@
+# Core dependencies (from the actual imports in the .py files)
+numpy
+pandas
+torch
+scikit-learn
+scipy
+pillow

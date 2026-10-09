@@ -46,9 +46,11 @@ build/
 *.pth
 *.onnx
 *.pb
+*.npy
 checkpoints/
 models/
 outputs/
+output/
 
 # Logs
 *.log
